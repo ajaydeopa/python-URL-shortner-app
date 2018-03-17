@@ -12,6 +12,8 @@ Base.metadata.bind = e
 app = Flask(__name__)
 api = Api(app)
 
+serverName = "deopa.herokuapp.com/"
+
 @app.route('/')
 def render_static():
     return render_template('index.html')
@@ -35,7 +37,7 @@ def generateShortURL():
     # generate 8 characters random string
     randomStr = ''.join([random.choice(string.ascii_letters + string.digits) for n in range(8)])
     # create short url
-    return "hck.re/" + randomStr
+    return randomStr
 
 # save the pair of actual URL and short URL in DB
 def saveURL(longURL, shortURL):
@@ -58,7 +60,7 @@ def getURLData(url):
 class createShortURL(Resource):
     def post(self):
         # return request.get_json(force=True)
-        reqData = request.get_json()
+        reqData = request.form
         longURL = reqData["long_url"]
 
         # executes when the URL is invalid
@@ -70,13 +72,13 @@ class createShortURL(Resource):
         shortURL = generateShortURL()
         # save the URL info in DB
         saveURL(longURL, shortURL)
-        res = { "short_url": shortURL, "status": "OK", "status_codes": [] }
+        res = { "short_url": serverName + shortURL, "status": "OK", "status_codes": [] }
         return res;
 
 class createShortURLs(Resource):
     def post(self):
-        reqData = request.get_json()
-        longURLs = reqData["long_urls"]
+        reqData = request.form
+        longURLs = json.loads(reqData["long_urls"])
 
         validURLs = []
         invalidURLs = []
@@ -99,19 +101,22 @@ class createShortURLs(Resource):
         # create short URL of all the valid URLs
         for url in validURLs:
             shortURL = generateShortURL()
+            # return shortURL
             saveURL(url, shortURL)
-            short_urls[url] = shortURL
+            short_urls[url] = serverName + shortURL
 
         res = { "short_urls": short_urls, "invalid_urls" : [], "status": "OK", "status_codes": [] }
         return res
 
 class getLongURL(Resource):
     def post(self):
-        reqData = request.get_json()
+        reqData = request.form
         shortURL = reqData["short_url"]
 
+        hashCode = [s for s in shortURL.split("/")][-1]
+
         # get the data of a short URL from DB
-        urlData = getURLData(shortURL)
+        urlData = getURLData(hashCode)
 
         # executes when the short URL is invalid
         if urlData is None:
@@ -123,14 +128,15 @@ class getLongURL(Resource):
 
 class getLongURLs(Resource):
     def post(self):
-        reqData = request.get_json()
-        shortURLs = reqData["short_urls"]
+        reqData = request.form
+        shortURLs = json.loads(reqData["short_urls"])
 
         long_urls = {}
         invalidURLs = []
 
         for url in shortURLs:
-            urlData = getURLData(url)
+            hashCode = [s for s in url.split("/")][-1]
+            urlData = getURLData(hashCode)
             # executes when short URL is invalid
             if urlData is None:
                 invalidURLs.append(url)
@@ -148,12 +154,11 @@ class getLongURLs(Resource):
 
 class accessServer(Resource):
     def get(self, shortURL):
-        url = "hck.re/" + shortURL
 
         # get data of the given short URL
         DBSession = sessionmaker(bind=e)
         session = DBSession()
-        urlData = session.query(URLs).filter(URLs.shortURL == url).first()
+        urlData = session.query(URLs).filter(URLs.shortURL == shortURL).first()
 
         if urlData is None:
             res = { "status": "FAILED", "status_codes": ["SHORT_URL_NOT_FOUND"] }
@@ -168,10 +173,12 @@ class accessServer(Resource):
 
 class countVisits(Resource):
     def post(self):
-        reqData = request.get_json()
+        reqData = request.form
         shortURL = reqData["short_url"]
 
-        urlData = getURLData(shortURL)
+        hashCode = [s for s in shortURL.split("/")][-1]
+
+        urlData = getURLData(hashCode)
 
         if urlData is None:
             res = {"status": "FAILED", "status_codes": ["SHORT_URL_NOT_FOUND"]}
@@ -194,19 +201,19 @@ class CleanURLs(Resource):
 # api.add_resource
 
 # create short URL for single URL
-api.add_resource(createShortURL, '/fetch/short-url', methods=['POST'])
+api.add_resource(createShortURL, '/fetch/short-url/', methods=['POST'])
 # create short URL for Multiple URLs
-api.add_resource(createShortURLs, '/fetch/short-urls', methods=['POST'])
+api.add_resource(createShortURLs, '/fetch/short-urls/', methods=['POST'])
 # get actual URL of a single short URL
-api.add_resource(getLongURL, '/fetch/long-url', methods=['POST'])
+api.add_resource(getLongURL, '/fetch/long-url/', methods=['POST'])
 # get actual URL of Multiple short URLs
-api.add_resource(getLongURLs, '/fetch/long-urls', methods=['POST'])
-# access a short url
-api.add_resource(accessServer, '/<shortURL>')
+api.add_resource(getLongURLs, '/fetch/long-urls/', methods=['POST'])
 # get count of number of times a short URL has been accessed
-api.add_resource(countVisits, '/fetch/count')
+api.add_resource(countVisits, '/fetch/count/')
 # truncate all data from DB
-api.add_resource(CleanURLs, '/clean-urls')
+api.add_resource(CleanURLs, '/clean-urls/')
+# access a short url
+api.add_resource(accessServer, '/<shortURL>/')
 
 if __name__ == '__main__':
     app.run(debug=True)
