@@ -161,7 +161,7 @@ class accessServer(Resource):
         urlData = session.query(URLs).filter(URLs.shortURL == shortURL).first()
 
         if urlData is None:
-            res = { "status": "FAILED", "status_codes": ["SHORT_URL_NOT_FOUND"] }
+            res = { "status": "FAILED", "status_codes": ["SHORT_URLS_NOT_FOUND"] }
             return res
 
         longURL = urlData.longURL
@@ -181,7 +181,7 @@ class countVisits(Resource):
         urlData = getURLData(hashCode)
 
         if urlData is None:
-            res = {"status": "FAILED", "status_codes": ["SHORT_URL_NOT_FOUND"]}
+            res = {"status": "FAILED", "status_codes": ["SHORT_URLS_NOT_FOUND"]}
             return res
 
         res = {"count": urlData.visitCount, "status": "OK", "status_codes": []}
