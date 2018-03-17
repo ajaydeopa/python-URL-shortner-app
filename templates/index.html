@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+    <table style="width: 100%">
+        <thead>
+            <tr>
+                <td>API</td>
+                <td>Method</td>
+                <td>Data</td>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>fetch/short-url/</td>
+                <td>POST</td>
+                <td>{ "long_url": "string" }</td>
+            </tr>
+
+            <tr>
+                <td>fetch/long-url/</td>
+                <td>POST</td>
+                <td>{ "short_url": "string" }</td>
+            </tr>
+
+            <tr>
+                <td>fetch/short-urls/</td>
+                <td>POST</td>
+                <td>{ "long_urls": ["url1", "url2"] }</td>
+            </tr>
+
+            <tr>
+                <td>fetch/long-urls/</td>
+                <td>POST</td>
+                <td>{ "short_urls": ["url1", "url2"] }</td>
+            </tr>
+
+            <tr>
+                <td>{short_url_hash}/</td>
+                <td>GET</td>
+                <td>NIL</td>
+            </tr>
+
+            <tr>
+                <td>clean-urls/</td>
+                <td>GET</td>
+                <td>NIL</td>
+            </tr>
+
+            <tr>
+                <td>fetch/count/</td>
+                <td>POST</td>
+                <td>{ "short_url": "string" }</td>
+            </tr>
+        </tbody>
+    </table>
+
+</body>
+</html>
